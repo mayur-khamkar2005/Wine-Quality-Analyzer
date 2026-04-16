@@ -12,26 +12,23 @@ import {
 } from './middlewares/error.middleware.js';
 import { apiLimiter } from './middlewares/rate-limit.middleware.js';
 import { apiRouter } from './routes/index.js';
-import { ApiError } from './utils/ApiError.js';
 
 export const app = express();
 app.disable('x-powered-by');
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      const normalizedOrigin = origin?.replace(/\/+$/, '');
+// 🔥 FIXED CORS (FINAL)
+app.use(cors({
+  origin: [
+    "https://wine-quality-analyzer-sigma.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true,
+}));
 
-      if (!normalizedOrigin || env.clientUrls.includes(normalizedOrigin)) {
-        return callback(null, true);
-      }
+// 🔥 VERY IMPORTANT (preflight requests handle)
+app.options("*", cors());
 
-      return callback(new ApiError(403, 'CORS origin denied'));
-    },
-    credentials: true,
-  }),
-);
-
+// Middlewares
 app.use(helmet());
 app.use(compression());
 app.use(apiLimiter);
@@ -42,6 +39,7 @@ if (env.nodeEnv !== 'test') {
   app.use(morgan('dev'));
 }
 
+// Health route
 app.get('/api/v1/health', (_req, res) => {
   res.status(200).json({
     success: true,
@@ -57,6 +55,9 @@ app.get('/api/v1/health', (_req, res) => {
   });
 });
 
+// Routes
 app.use('/api/v1', apiRouter);
+
+// Error handlers
 app.use(notFoundHandler);
 app.use(errorHandler);
