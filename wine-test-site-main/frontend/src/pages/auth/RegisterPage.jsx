@@ -93,7 +93,7 @@ const RegisterPage = () => {
           value={formState.name}
           onChange={handleChange}
           error={errors.name}
-          placeholder="Mayur Sharma"
+          placeholder="Mayur khamkar"
         />
 
         <FormField
